@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-aFq/bzH65dt+w6FI2ooMVUpc+21e0SRygnTpmBvdBgSdnuTN7QbdgL+OapgHtvPp" crossorigin="anonymous" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-qKXV1j0HvMUeCBQ+QVp7JcfGl760yU08IQ+GpUo5hlbpg51QRiuqHAJz8+BrxE/N"
+        crossorigin="anonymous"></script>
+    <title>KNN Algorithme</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+    
+    <style>
+        *{
+            background-color: #fff;
+            color: black;
+        }
+        .output {
+            color: brown;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <div class="knn">
+
+        <center>
+            <h1>know if the rain will come down or not</h1>
+        </center>
+
+        <div class="row">
+            <div class="col-3"></div>
+            <div class="col-6">
+                <label for="humidity" class="form-label">humidity input(X)</label>
+                <input type="number" max="10" min="0" required="required" id="humidity" class="form-control" placeholder="humidity input" />
+
+                <label for="Pressure" class="form-label">Pressure input(Y)</label>
+                <input type="number" max="10" min="0" required="required" id="Pressure" class="form-control" placeholder="Pressure input" />
+                <center>
+                    <button id="predict" onclick="myFunction()" class="btn btn-secondary mt-2">
+                        Submit
+                    </button>
+                </center>
+                <br />
+            </div>
+            <div class="col-3"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-6"><canvas id="myChart" style="width: 100%; max-width: 700px"> </canvas></div>
+        <div class="col-6">
+            <br><br><br>
+            <center>
+                <span class="output" id="output"></span>
+
+            </center>
+            <br><br>
+            <div id="info">
+                <p id="info_p1"></p>
+                <p id="info_p2"></p>
+                <p id="info_p3"></p>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <script src="data.js"></script>
+    <script>
+        var result;
+        result = 0;
+
+        var trainingSet;
+        trainingSet = trainingSet();
+        //console.log(trainingSet)
+        function myFunction() {
+            var x = document.getElementById("humidity").value;
+            var y = document.getElementById("Pressure").value;
+
+            var distance = [];
+            trainingSet.forEach((element) => {
+                distance.push(
+                    Math.sqrt(
+                        (Number(x) - element.humidity) ** 2 +
+                        (Number(y) - element.pressure) ** 2
+                    )
+                );
+            });
+
+            var redNeighbors = 0;
+            var blueNeighbors = 0;
+            for (var k = 0; k < 5; k++) {
+                var minDinstance = Math.min.apply(Math, distance);
+                var index = distance.indexOf(minDinstance);//To get the index
+                console.log(trainingSet[index].rain);
+                trainingSet[index].rain == true ? blueNeighbors++ : redNeighbors++;
+                distance[index] = +Infinity; //+infini
+            }
+
+            if (redNeighbors > blueNeighbors) {
+                document.getElementById("output").innerHTML = "Most probably it will not rain";
+                myChart(Number(x), Number(y), false)
+            } else {
+                document.getElementById("output").innerHTML = "Most probably it will rain";
+                myChart(Number(x), Number(y), true)
+            }
+
+            document.getElementById("info_p1").innerHTML= ("Not Rain&#128308;");
+            document.getElementById("info_p2").innerHTML= ("Rain&#128309;");
+            document.getElementById("info_p3").innerHTML= ("New Point&#9899;");
+
+        }
+
+        function myChart(x, y, z) {
+            var dataa = [];
+            var rain = [];
+            trainingSet.forEach((element) => {
+                dataa.push({ x: element.humidity, y: element.pressure });
+                rain.push(element.rain);
+            });
+            dataa.push({ x: x, y: y });//pour ajouter les nouvelle données
+            rain.push(z);//pour ajouter la nouvelle données
+            var myChart = new Chart("myChart", {
+                type: "scatter",
+                data: {
+                    datasets: [
+                        {
+                            pointRadius: 4,
+                            pointBackgroundColor: [],
+                            data: dataa,
+                        },
+                    ],
+                },
+                options: {
+                    legend: { display: false },
+                    scales: {
+                        xAxes: [{ ticks: { min: 0, max: 10 } }],
+                        yAxes: [{ ticks: { min: 0, max: 10 } }],
+                    },
+                },
+            });
+            for (var i = 0; i < rain.length - 1; i++) {
+                if (rain[i] == true) {
+                    myChart.data.datasets[0].pointBackgroundColor[i] = "blue";
+                } else {
+                    myChart.data.datasets[0].pointBackgroundColor[i] = "red";
+                }
+            }
+            myChart.data.datasets[0].pointBackgroundColor[rain.length - 1] = "black";
+            myChart.update();
+        }
+    </script>
+</body>
+
+</html>
